@@ -136,3 +136,10 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# === aistudy 学习项目临时产物 ===
+# matplotlib 输出的图片（运行课程脚本时自动生成）
+04_matplotlib/_images/
+
+# pandas 课程生成的示例数据集（脚本运行时自动重建）
+06_datasets/*.csv
