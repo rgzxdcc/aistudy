@@ -131,3 +131,7 @@ for feat, lab in zip(features, labels):
 # 练习（可选）：写一个列表推导式，把 ["  apple ", " BANANA "] 处理成
 #              去空格、小写后的列表 ["apple", "banana"]。
 # 提示：字符串方法 .strip() 去首尾空格，.lower() 转小写。
+
+# dcc 练习
+str = [s.strip().lower() for s in ["  apple ", " BANANA "]]
+print(str)
