@@ -146,3 +146,6 @@ cython_debug/
 
 # pandas 课程生成的示例数据集（脚本运行时自动重建）
 06_datasets/*.csv
+
+# 搜狗输入法等第三方软件误写到项目目录的调试日志
+debug.log
