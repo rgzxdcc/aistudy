@@ -139,13 +139,13 @@ cython_debug/
 
 # === aistudy 学习项目临时产物 ===
 # matplotlib 输出的图片（运行课程脚本时自动生成）
-04_matplotlib/_images/
-05_ml_basics/_images/
-07_lightgbm/_images/
-07_lightgbm/_output/
+ml/04_matplotlib/_images/
+ml/05_ml_basics/_images/
+ml/07_lightgbm/_images/
+ml/07_lightgbm/_output/
 
 # pandas 课程生成的示例数据集（脚本运行时自动重建）
-06_datasets/*.csv
+ml/06_datasets/*.csv
 
 # 搜狗输入法等第三方软件误写到项目目录的调试日志
 debug.log
