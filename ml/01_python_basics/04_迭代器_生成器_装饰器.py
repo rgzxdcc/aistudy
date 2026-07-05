@@ -188,3 +188,15 @@ print()
 #
 # 练习（可选）：写一个生成器 fibonacci()，产生斐波那契数列前 n 项。
 # 提示：a, b = 0, 1; for _ in range(n): yield a; a, b = b, a + b
+
+def fibonacci(n):
+	""" 生成斐波那契数列 """
+	a = 0 
+	b = 1
+	for _ in range(n):
+		yield a
+        #a = b
+        #b = a + b
+		a, b = b, a + b
+
+print(list(fibonacci(10)))

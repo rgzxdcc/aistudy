@@ -107,6 +107,7 @@ print("Lambda 相加:", add(3, 4))        # 7
 # 6.1 map(函数, 可迭代对象)：对每个元素应用函数
 prices = [100, 200, 300]
 discounted = list(map(lambda p: p * 0.8, prices))   # 全场 8 折
+
 print("打折后:", discounted)   # [80.0, 160.0, 240.0]
 # 注意：map 在 Python3 返回迭代器，要用 list() 才能看到结果
 
@@ -172,3 +173,14 @@ print("counter:", counter)   # 1
 #   (1) 用 filter + lambda 筛出正数
 #   (2) 用 map + lambda 取每个数的平方
 #   (3) 改用列表推导式再写一遍
+
+data = [1, -2, 3, -4, 5]
+positive = list(filter(lambda x: x > 0, data))
+print(positive)
+square = list(map(lambda d: d ** 2, data)) # type: ignore
+print(square)
+
+positive = [x for x in data if x > 0]
+print(positive)
+square = [x ** 2 for x in data] # type: ignore
+print(square)

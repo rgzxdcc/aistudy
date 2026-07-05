@@ -164,3 +164,19 @@ for p in [SAMPLE_TXT, out_path, config_path]:
 #
 # 练习（可选）：写一个函数 load_csv_line(path)，逐行读取一个 CSV 文件，
 #   按 "," 分割成列表返回。要求：文件不存在时打印友好提示而非崩溃。
+
+import csv
+
+def load_csv_line(path):
+    if not os.path.exists(path):
+        print("文件不存在")
+        return
+    with open(path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for line in reader:    # csv.reader 已按逗号拆分，line 就是 list
+            yield line
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+data_csv = os.path.join(HERE, "..", "06_datasets/students_cleaned.csv")
+for line in load_csv_line(data_csv):
+    print(line)

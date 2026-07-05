@@ -175,3 +175,16 @@ print(s)                               # Sample(feature=[1.7, 65], label=1, weig
 #
 # 练习（可选）：用 @dataclass 定义一个 Student 类，包含 name、score，
 #   并添加一个 @property 方法 passed（score >= 60 返回 True）。
+
+from dataclasses import dataclass
+@dataclass
+class Student:
+    name: str
+    score: int
+
+    @property
+    def passed(self):
+        return self.score >= 60
+        
+xw = Student("xw", 59)
+print(xw.passed)
