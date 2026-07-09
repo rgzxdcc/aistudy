@@ -47,6 +47,8 @@ X, y = data.data, data.target
 X_tr, X_te, y_tr, y_te = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
+print(f"  训练集样本数 = {X_tr.shape[0]}")
+print(f"  测试集样本数 = {X_te.shape[0]}")
 
 # 2. 创建分类器并训练
 # 【ML 场景】LGBMClassifier 的参数名与原生 API 略有不同:

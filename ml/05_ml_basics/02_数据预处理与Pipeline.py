@@ -135,13 +135,14 @@ print(f"\n=== Pipeline ===\n测试集准确率: {acc:.4f}")
 # 制造量纲差异巨大的数据：第 0 列 0~1，第 1 列 0~1000
 np.random.seed(42)
 n = 100
+# 生成 100 个 [0, 1) 区间的均匀随机数作为特征 X1
+# 生成 100 个 [0, 1000) 区间的均匀随机数作为特征 X2
 X1 = np.random.rand(n)                    # 0~1
 X2 = np.random.rand(n) * 1000             # 0~1000
 y_bin = (X1 + X2/1000 > 1).astype(int)    # 人造标签
 X_raw = np.column_stack([X1, X2])
 
 X_tr, X_te, y_tr, y_te = train_test_split(X_raw, y_bin, test_size=0.3, random_state=42)
-
 # 不标准化
 m1 = KNeighborsClassifier(n_neighbors=5).fit(X_tr, y_tr)
 print(f"\n不标准化准确率: {m1.score(X_te, y_te):.4f}")
