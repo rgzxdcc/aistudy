@@ -7,13 +7,13 @@ class ReLU:
 
     def forward(self, x):
         self.mask = (x <= 0)
-        out = x.copy
+        out = x.copy()
         out[self.mask] = 0
 
         return out
 
     def backward(self, dout):
-        dout[self_mask] = 0
+        dout[self.mask] = 0
         dx = dout
 
         return dx
@@ -68,7 +68,7 @@ class SoftmaxWithLoss:
         return self.loss
 
     def backward(self, dout):
-        batch_size = self.t.shape(0)
+        batch_size = self.t.shape[0]
         dx = (self.y - self.t) / batch_size
 
         return dx

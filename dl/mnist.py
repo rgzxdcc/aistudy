@@ -29,12 +29,18 @@ img_size = 784
 
 def _download(file_name):
     file_path = dataset_dir + "/" + file_name
-    
+
     if os.path.exists(file_path):
         return
 
     print("Downloading " + file_name + " ... ")
-    urllib.request.urlretrieve(url_base + file_name, file_path)
+    # 部分网络环境(代理/防火墙)会拦截 HTTPS 导致 SSL 证书验证失败，
+    # MNIST 为公开数据集，此处关闭证书校验以保证可下载
+    import ssl
+    ssl_context = ssl._create_unverified_context()
+    with urllib.request.urlopen(url_base + file_name, context=ssl_context) as resp, \
+         open(file_path, 'wb') as f:
+        f.write(resp.read())
     print("Done")
     
 def download_mnist():
