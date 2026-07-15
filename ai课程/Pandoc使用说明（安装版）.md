@@ -74,7 +74,7 @@ set PLANTUML_BIN=java -jar %PUMLJAR%
 **验证 PlantUML：**
 
 ```bash
-java -jar plantuml.jar -version
+java -jar $env:PUMLJAR -version
 ```
 
 ### 1.3 LaTeX 环境（可不安装）
@@ -94,7 +94,11 @@ winget install MiKTeX
 ```bash
 pandoc 输入文档.md --filter pandoc-plantuml --reference-doc=my-style.docx -o 输出文档.docx
 ```
-
+若需要用到pandoc-plantuml，需要下载pandoc-plantuml-filter插件，可运行
+```bash
+# 先装pandoc本体 + 对接plantuml的过滤器
+pip install pandoc pandoc-plantuml-filter
+```
 ### 2.2 Docx转MD
 
 ```bash
