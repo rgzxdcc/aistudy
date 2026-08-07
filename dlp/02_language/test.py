@@ -1,26 +1,26 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
+from common.util import preprocess
 
 text = 'You say goodbye and I say hello.'
-text = text.lower()
-text = text.replace('.', ' .')
-print(text)
-
-words = text.split(' ')
-print(words)
-
-word_to_id = {}
-id_to_word = {}
-
-for word in words:
-    if word not in word_to_id:
-        new_id = len(word_to_id)
-        word_to_id[word] = new_id
-        id_to_word[new_id] = word
-
+corpus, word_to_id, id_to_word = preprocess(text)
+print(corpus)
 print(word_to_id)
 print(id_to_word)
 
-corpus = [word_to_id[word] for word in words]
-print(corpus)
-corpus = np.array(corpus)
-print(corpus)
+C = np.array([
+        [0, 1, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 1, 1, 0],
+        [0, 1, 0, 1, 0, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 1, 0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 1, 0],
+    ], dtype=np.int32)
+
+print(C[0])
+print(C[4])
+print(C[word_to_id['goodbye']])
