@@ -148,3 +148,40 @@ def ppmi_fast(C, verbose=False, eps=1e-8):
     M[np.isnan(M)] = 0
     M = np.maximum(0, M)
     return M
+
+def create_contexts_target(corpus, window_size=1):
+    target = corpus[window_size:-window_size]
+    contexts = []
+
+    for idx in range(window_size, len(corpus) - window_size):
+        cs = []
+        for t in range (-window_size, window_size + 1):
+            if t == 0:
+                continue
+            cs.append(corpus[idx + t])
+        contexts.append(cs)
+
+    return np.array(contexts), np.array(target)
+
+def convert_one_hot(corpus, vocab_size):
+    '''转换为one-hot表示
+
+    :param corpus: 单词ID列表（一维或二维的Numpy数组）
+    :param vocab_size: 词汇个数
+    :return: one-hot表示（二维或三维的Numpy数组）
+    '''
+    N = corpus.shape[0]
+
+    if corpus.ndim ==1:
+        one_hot = np.zeros((N, vocab_size), dtype=np.int32)
+        for idx, word_id in enumerate(corpus):
+            one_hot[idx, word_id] = 1
+
+    elif corpus.ndim == 2:
+        C = corpus.shape[1]
+        one_hot = np.zeros((N, C, vocab_size), dtype=np.int32)
+        for idx_0, word_ids in enumerate(corpus):
+            for idx_1, word_id in enumerate(word_ids):
+                one_hot[idx_0, idx_1, word_id] = 1
+
+    return one_hot
