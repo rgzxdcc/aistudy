@@ -1,8 +1,6 @@
 import os
 import sys
-from turtle import forward
 
-from sklearn.metrics import PredictionErrorDisplay
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 from common.layers import Affine, Sigmoid, SoftmaxWithLoss 
