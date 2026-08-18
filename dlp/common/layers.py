@@ -138,7 +138,7 @@ class Embedding:
         out = W[idx]
         return out
 
-    def backwrad(self, dout):
+    def backward(self, dout):
         dW, = self.grads
         dW[...] = 0
         np.add.at(dW, self.idx, dout)
