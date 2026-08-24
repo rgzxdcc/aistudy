@@ -113,8 +113,8 @@ class SigmoidWithLoss:
         self.t = t
         self.y = 1 / (1 + np.exp(-x))
 
-        if self.t.size == self.y.size:      # 若 t 为 one-hot (N,2)
-            self.t = self.t.argmax(axis=1)  # 转成标签，保证 backward 形状一致
+        if self.t.ndim == 2 and self.t.shape[1] > 1:  # 若 t 为 one-hot (N,2)
+            self.t = self.t.argmax(axis=1)            # 转成标签，保证 backward 形状一致
 
         self.loss = cross_entropy_error(np.c_[1-self.y, self.y], self.t)
         

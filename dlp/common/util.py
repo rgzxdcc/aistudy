@@ -1,7 +1,8 @@
-from calendar import c
-from re import M
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import numpy as np
+from common.np import *
 
 # 准备语料库
 def preprocess(text):
@@ -185,3 +186,67 @@ def convert_one_hot(corpus, vocab_size):
                 one_hot[idx_0, idx_1, word_id] = 1
 
     return one_hot
+
+
+def to_cpu(x):
+    import numpy
+    if type(x) == numpy.ndarray:
+        return x
+    return np.asnumpy(x)
+
+def to_gpu(x):
+    import cupy
+    if type(x) == cupy.ndarray:
+        return x
+    return cupy.asarray(x)
+
+def analogy(a, b, c, word_to_id, id_to_word, word_matrix, top=5, answer=None):
+    '''基于单词向量的类推（analogy）问题
+
+    例如 “king - man + woman = queen” 这样的类推计算。
+
+    :param a: 类比运算中的单词a
+    :param b: 类比运算中的单词b（满足 a-b 的关系）
+    :param c: 待求解单词c（求解 d，使得 a:b = c:d）
+    :param word_to_id: 单词-id字典
+    :param id_to_word: id-单词字典
+    :param word_matrix: 单词向量矩阵
+    :param top: 显示前几个候选结果
+    :param answer: 正确答案（可选），存在时输出其相似度
+
+    '''
+    for word in (a, b, c):
+        if word not in word_to_id:
+            print('%s is not found' % word)
+            return
+    
+    print('\n[analogy] ' + a + ':' + b + ' = ' + c + ':?')
+    a_vec, b_vec, c_vec = word_matrix[word_to_id[a]], word_matrix[word_to_id[b]], word_matrix[word_to_id[c]]
+    query_vec = b_vec - a_vec + c_vec
+    query_vec = normalize(query_vec)
+
+    similarity = np.dot(word_matrix, query_vec)
+
+    if answer is not None:
+        print("==>" + answer + ":" + str(np.dot(word_matrix[word_to_id[answer]], query_vec)))
+
+    count = 0
+    for i in (-1 * similarity).argsort():
+        if np.isnan(similarity[i]):
+            continue
+        if id_to_word[i] in (a, b, c):
+            continue
+        print(' {0}: {1}'.format(id_to_word[i], similarity[i]))
+
+        count += 1
+        if count >= top:
+            return
+
+def normalize(x):
+    if x.ndim == 2:
+        s = np.sqrt((x * x).sum(1))
+        x /= s.reshape((s.shape[0], 1))
+    elif x.ndim == 1:
+        s = np.sqrt((x * x).sum())
+        x /= s
+    return x
