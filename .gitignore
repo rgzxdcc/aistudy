@@ -153,3 +153,6 @@ debug.log
 # 课程生成的 pickle 文件（脚本运行时自动重建）
 *.pkl
 *.gz
+
+# macOS Finder 生成的目录外观元数据
+.DS_Store
