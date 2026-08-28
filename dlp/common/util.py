@@ -280,3 +280,54 @@ def eval_perplexity(model, corpus, batch_size=10, time_size=35):
     print('')
     ppl = np.exp(total_loss / max_iters)
     return ppl
+
+def eval_seq2seq(model, question, correct, id_to_char, 
+                verbos=False, is_reverse=False):
+    '''评估正确率
+
+    :param model: 学习模型
+    :param question: 问题（字符ID数组）
+    :param correct: 正确解（字符ID列表）
+    :param id_to_char: 字符ID与字符映射的字典
+    :param verbose: 指定是否显示结果
+    :param is_reverse: 指定是否反转输入语句
+
+    :return: 返回正确率
+    '''
+    correct = correct.flatten()
+    # 开头的分隔符
+    start_id = correct[0]
+    correct = correct[1:]
+    guess = model.generate(question, start_id, len(correct))
+
+    # 转换为字符串
+    question = ''.join([id_to_char[int(c)] for c in question.flatten()])
+    correct = ''.join([id_to_char[int(c)] for c in correct])
+    guess = ''.join([id_to_char[int(c)] for c in guess])
+
+    if verbos:
+        if is_reverse:
+            question = question[::-1]
+
+        colors = {'ok': '\033[92m', 'fail': '\033[91m', 'close': '\033[0m'}
+        print('Q', question)
+        print('T', correct)
+
+        is_windows = os.name == 'nt'
+
+        if correct == guess:
+            mark = colors['ok'] + '☑' + colors['close']
+            if is_windows:
+                mark = '0'
+            print(mark + ' ' + guess)
+        else:
+            mark = colors['fail'] + '☒' + colors['close']
+            if is_windows:
+                mark = 'X'
+            print(mark + ' ' + guess)
+        print('---')
+
+    return 1 if guess == correct else 0
+
+
+
