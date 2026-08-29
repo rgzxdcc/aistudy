@@ -1,6 +1,7 @@
 import sys, os
 
 from scipy.cluster.hierarchy import optimal_leaf_ordering
+
 _here = os.path.dirname(os.path.abspath(__file__))
 _dl = os.path.dirname(_here)              # dl/
 sys.path.append(_dl)                      # 让 from common.layers import * 生效
@@ -26,6 +27,7 @@ optimizers = OrderedDict()
 optimizers["SGD"] = SGD(lr=0.05)
 optimizers["Momentum"] = Momentum(lr=0.1)
 optimizers["AdaGrad"] = AdaGrad(lr = 1.5)
+optimizers["Adam"] = Adam(lr=0.3)
 
 idx = 1
 

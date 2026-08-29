@@ -3,12 +3,13 @@ import torch
 
 # ==================== 模型切换 ====================
 # 日常练习用 Qwen（小、快），需要对照书中效果时切换为 Phi-3
-# MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"      # 约 1GB，首次运行自动下载
-MODEL_NAME = "microsoft/Phi-3-mini-4k-instruct"  # 约 7.6GB，书中指定模型
+MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"      # 约 1GB，首次运行自动下载
+# MODEL_NAME = "microsoft/Phi-3-mini-4k-instruct"  # 约 7.6GB，书中指定模型
 # ==================================================
 
 # 设备选择：优先 Apple GPU（mps），不支持时回退 CPU
-DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+# DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # 加载模型和分词器
 model = AutoModelForCausalLM.from_pretrained(
