@@ -156,3 +156,6 @@ debug.log
 
 # macOS Finder 生成的目录外观元数据
 .DS_Store
+
+# CUDA 运行缓存
+.cuda_cache/
