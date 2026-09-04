@@ -1,0 +1,6 @@
+# 排除清单
+.venv
+.env
+__pycache__
+.git
+*.md
