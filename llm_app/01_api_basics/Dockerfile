@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制代码
 COPY app.py .
 
-# 申明服务坚挺 8000 端口
+# 申明服务监听 8000 端口
 EXPOSE 8000
 
 # 启动执行命令
