@@ -159,3 +159,6 @@ debug.log
 
 # CUDA 运行缓存
 .cuda_cache/
+
+# Model checkpoints
+*.pth
