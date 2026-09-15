@@ -116,7 +116,7 @@ def test_simpleTokenizerV2():
 
 # ================================ BPE ================================
 # 测试BPE分词器
-# 提问：BPE如何处理不明词元
+# 提问：BPE如何处理未知词元
 def test_BPE():
     print("version if tiktoken: " + tiktoken.__version__)
     tokenizer = tiktoken.get_encoding("gpt2")
