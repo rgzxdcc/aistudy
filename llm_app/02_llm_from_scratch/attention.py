@@ -122,11 +122,6 @@ class SimpleAttention_V1(nn.Module):
         context_vecs = atten_weights @ values
 
         return context_vecs
-    
-    def set_qkv(self, q, k, v):
-        self.W_q = nn.Parameter(q)
-        self.W_k = nn.Parameter(k)
-        self.W_v = nn.Parameter(v)
 
 # 测试attention_v1
 def test_simpleAttentionV1():
@@ -382,7 +377,7 @@ def practice3_3():
 # ================================ 指定执行 ================================
 if __name__=="__main__":
     # attention_from_scratch()
-    # self_attention()
+    self_attention()
     # test_simpleAttentionV1()
     # test_simpleAttentionV2()
     # practice3_1()
@@ -391,4 +386,56 @@ if __name__=="__main__":
     # test_MultiHeadAttentionWrapper()
     # practice3_2()
     # test_MHA()
-    practice3_3()
+    # practice3_3()
+
+# ================================ 重写MHA ================================
+class MultiHeadAttention(nn.Module):
+    def __init__(self, d_in, d_out, context_length, dropout, num_heads, qkv_bias=False) -> None:
+        super().__init__()
+
+        assert (d_out % num_heads == 0), "d_out must be divisible by num_heads"
+
+        self.d_out = d_out
+        self.num_heads = num_heads
+        self.head_dim = d_out // num_heads
+        self.W_query = nn.Linear(d_in, d_out, qkv_bias)
+        self.W_key = nn.Linear(d_in, d_out, qkv_bias)
+        self.W_value = nn.Linear(d_in, d_out, qkv_bias)
+        self.dropout = nn.Dropout(dropout)
+        self.proj_out = nn.Linear(d_out, d_out)
+        self.register_buffer('mask', 
+            torch.triu(torch.ones(context_length, context_length), diagonal=1))
+        
+    def forward(self, x):
+        b, num_tokens, d_in = x.shape
+
+        # [b, num_tokens, d_out]
+        querys = self.W_query(x)
+        keys = self.W_key(x)
+        values = self.W_value(x)
+
+        # view + transpose
+        querys = querys.view(b, num_tokens, self.num_heads, self.head_dim)
+        keys = keys.view(b, num_tokens, self.num_heads, self.head_dim)
+        values = values.view(b, num_tokens, self.num_heads, self.head_dim)
+        # [b, num_heads, num_tokens, head_dim]
+        querys = querys.transpose(1, 2)
+        keys = keys.transpose(1, 2)
+        values = values.transpose(1, 2)
+
+        # calc attention
+        # [b, num_heads, num_tokens, num_tokens]
+        atten_scores = querys @ keys.transpose(2, 3)
+        masked_scores = atten_scores.masked_fill_(self.mask.bool()[:num_tokens, :num_tokens], -torch.inf)
+        atten_weights = torch.softmax(masked_scores / keys.shape[-1]**0.5, dim=-1)
+        atten_weights = self.dropout(atten_weights)
+
+        # generate context
+        # [b, num_heads, num_tokens, head_dim] -> [b, num_tokens, num_heads, head_dim]
+        context_vecs = (atten_weights @ values).transpose(1, 2)
+        # [b, num_heads, num_tokens, head_dim] -> [b, num_tokens, d_out]
+        context_vecs = context_vecs.contiguous().view(b, num_tokens, self.d_out)
+        context_vecs = self.proj_out(context_vecs)
+
+        return context_vecs
+
