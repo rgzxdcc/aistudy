@@ -389,7 +389,7 @@ if __name__=="__main__":
     # practice3_3()
 
 # ================================ 重写MHA ================================
-class MultiHeadAttention(nn.Module):
+class MultiHeadAttention_Rewrite(nn.Module):
     def __init__(self, d_in, d_out, context_length, dropout, num_heads, qkv_bias=False) -> None:
         super().__init__()
 

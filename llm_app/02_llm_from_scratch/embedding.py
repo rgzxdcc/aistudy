@@ -6,34 +6,42 @@ from torch.utils.data import Dataset, DataLoader
 
 # ================================ 文本分词 ================================
 
-# 读取the-verdict.txt
-script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, "the-verdict.txt")
-with open(file_path, "r", encoding="utf-8") as f:
-    raw_text = f.read()
-print("Total number of character in the-verdict.txt:", len(raw_text))
+def split_tokens():
+    # 读取the-verdict.txt
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, "the-verdict.txt")
+    with open(file_path, "r", encoding="utf-8") as f:
+        raw_text = f.read()
+    print("Total number of character in the-verdict.txt:", len(raw_text))
 
-# 使用简易分词器对the-verdict.txt内容进行词元分割
-preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', raw_text)
-preprocessed = [item for item in preprocessed if item.strip()]
-print("Total number of word in the-verdict.txt:", len(preprocessed))
-# print(preprocessed[:30])
+    # 使用简易分词器对the-verdict.txt内容进行词元分割
+    preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', raw_text)
+    preprocessed = [item for item in preprocessed if item.strip()]
+    print("Total number of word in the-verdict.txt:", len(preprocessed))
+    print(preprocessed[:30])
+
+    return preprocessed
 
 
 # ================================ token->ID ================================
 # 提问：词汇表构建流程
 
-# 按照字母顺序，剔除重复词元
-all_words = sorted(set(preprocessed))
-vocab_size = len(all_words)
-print(f"origin vaocab_size: {vocab_size}")
+def construct_vocab():
+    preprocessed = split_tokens()
 
-# 创建词汇表，打印前50条示例
-vocab = {token:id for id, token in enumerate(all_words)}
-# for i, item in enumerate(vocab.items()):
-#     print(item)
-#     if i >= 50:
-#         break
+    # 按照字母顺序，剔除重复词元
+    all_words = sorted(set(preprocessed))
+    vocab_size = len(all_words)
+    print(f"origin vaocab_size: {vocab_size}")
+
+    # 创建词汇表，打印前50条示例
+    vocab = {token:id for id, token in enumerate(all_words)}
+    for i, item in enumerate(vocab.items()):
+        print(item)
+        if i >= 50:
+            break
+
+    return vocab
 
 # 实现简单文本分词器
 class SimpleTokenizerV1:
@@ -55,6 +63,7 @@ class SimpleTokenizerV1:
 
 # 测试简单分词器
 def test_simpleTokenizerV1():
+    vocab = construct_vocab()
     tokenizer = SimpleTokenizerV1(vocab)
     text = """"It's the last he painted, you know." Mrs. Gisburn said with pardonable pride."""
     ids = tokenizer.encode(text)
@@ -71,11 +80,14 @@ def test_simpleTokenizerV1():
 
 # ================================ 特殊词元 ================================
 
-# 添加<|unk|>、<|endoftext|>
-all_tokens = sorted(set(preprocessed))
-all_tokens.extend(["<|endoftext|>", "<|unk|>"])
-vocab = {str:id for id, str in enumerate(all_tokens)}
-print("extend vocab_size: ", len(vocab))
+def process_unkonwn_token():
+    preprocessed = split_tokens()
+
+    # 添加<|unk|>、<|endoftext|>
+    all_tokens = sorted(set(preprocessed))
+    all_tokens.extend(["<|endoftext|>", "<|unk|>"])
+    vocab = {str:id for id, str in enumerate(all_tokens)}
+    print("extend vocab_size: ", len(vocab))
 
 # for i, item in enumerate(list(vocab.items())[-5:]):
 #     print(item)

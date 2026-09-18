@@ -63,7 +63,7 @@ class DummyLayerNorm(nn.Module):
         return x
 
 # 测试大模型数据流
-def test_GPTModel():
+def test_DummyGPTModel():
     tokenizer = tiktoken.get_encoding("gpt2")
     batch = []
     text1 = "Every effort moves you"
@@ -449,14 +449,14 @@ def practice4_3():
 
 # ================================ 指定执行 ================================
 if __name__=="__main__":
-    # test_GPTModel()
+    # test_DummyGPTModel()
     # test_norm()
     # test_layerNorm()
     # cmp_gelu_relu()
     # test_feedforward()
     # test_residual_connection()
     # test_TransformerBlock()
-    # test_GPTModel()
+    test_GPTModel()
     # practice4_1()
     # practice4_2()
-    test_generate()
+    # test_generate()
