@@ -19,6 +19,13 @@ GPT_CONFIG_124M = {
     "qkv_bias":False        # 查询-键-值偏置
 }
 
+model_configs = {
+    "gpt2-small (124M)":{"emb_dim":768, "n_layers":12, "n_heads":12},
+    "gpt2-medium (355M)":{"emb_dim":1024, "n_layers":24, "n_heads":16},
+    "gpt2-large (774M)":{"emb_dim":1280, "n_layers":36, "n_heads":20},
+    "gpt2-xl (1558M)":{"emb_dim":1600, "n_layers":48, "n_heads":25}
+}
+
 # 定义全局model、tokenizer
 # torch.manual_seed(123)
 # model = GPTModel(GPT_CONFIG_124M)
@@ -44,6 +51,7 @@ def token_ids_to_text(ids: torch.Tensor, tokenizer:tiktoken.Encoding):
 
 def test_ids_text():
     start_context = "Every effort moves you"
+    model = GPTModel(GPT_CONFIG_124M)
 
     token_ids = generate_text_simple(
         model = model,
@@ -65,6 +73,8 @@ def calc_loss_by_step():
                            [1107, 588, 11311]])    #  "realy like chocolate"]                       
 
     # 使用模型计算得分
+    torch.manual_seed(123)
+    model = GPTModel(GPT_CONFIG_124M)
     model.eval()
     with torch.no_grad():
         logits = model(inputs)
@@ -118,8 +128,8 @@ def calc_loss_by_step():
     perplexity = torch.exp(loss)
     print("perplexity: ", perplexity)
 
-# 组件训练批次进行损失计算
-def construct_batch_calc_loss():
+# 组件训练批次数据
+def construct_train_batch():
 
     # 仍然加载短篇小说The Verdict
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -200,7 +210,7 @@ def calc_loss_loader(data_loader, model, device, num_batches=None):
 def test_calc_loss_loader():
     device = common_device
     model.to(device)
-    train_loader, val_loader = construct_batch_calc_loss()
+    train_loader, val_loader = construct_train_batch()
     with torch.no_grad():
         train_loss = calc_loss_loader(train_loader, model, device)
         val_loss = calc_loss_loader(val_loader, model, device)
@@ -269,7 +279,7 @@ def pre_train():
     model.to(common_device)
     optimizer = torch.optim.AdamW(model.parameters(), lr = 0.0004, weight_decay=0.1)
     num_epochs = 10
-    train_loader, val_loader = construct_batch_calc_loss()
+    train_loader, val_loader = construct_train_batch()
 
     # 开启训练循环
     train_losses, val_losses, tokens_seen = train_model_simple(model, train_loader,
@@ -281,7 +291,7 @@ def pre_train():
     # plot_losses(epochs_tensor, tokens_seen, train_losses, val_losses)
 
     # 返回训练好的模型
-    return model
+    return model, optimizer
 
 # 绘制损失曲线
 def plot_losses(epoches_seen, tokens_seen, train_losses, val_losses):
@@ -300,7 +310,7 @@ def plot_losses(epoches_seen, tokens_seen, train_losses, val_losses):
 
 # ================================ 选择策略 ================================
 def test_gen_after_pretrain():
-    model = pre_train()
+    model, _ = pre_train()
 
     model.to("cpu")
     model.eval()
@@ -331,6 +341,7 @@ def create_inverse_vocab():
 # 测试温度缩放
 def test_temperature():
     inverse_vocab = create_inverse_vocab()
+
     # 贪心解码
     next_token_logits = torch.tensor(
         [4.51, 0.89, -1.9, 6.75, 1.63, -1.62, -1.89, 6.28, 1.79]
@@ -404,7 +415,7 @@ def top_k_sample():
     print("top logits: ", top_logits)
     print("top pos: ", top_pos)
 
-    # 将其余值提华为-inf
+    # 将其余值替换为-inf
     new_logits = torch.where(
         condition = next_token_logits < top_logits[-1],
         input = torch.tensor(float('-inf')),
@@ -449,9 +460,10 @@ def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=No
         idx = torch.cat((idx, idx_text), dim=1)
 
     return idx
+
 # 测试generate函数
 def test_generate():
-    model = pre_train()
+    model, _ = pre_train()
     model.to("cpu")
     model.eval()
 
@@ -475,15 +487,284 @@ def test_generate():
 # practice 5.3
 # 强制generate表现出确定性行为（禁用随机采样）：将temperature设置为不大于1，将top-k设置为1
 
+# ================================ 保存与加载权重 ================================
+# 保存权重
+def test_model_save():
+    model, _ = pre_train()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(script_dir, "models/test/model.pth")
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    torch.save(model.state_dict(), filepath)
+
+# 加载权重
+def test_model_load():
+    model = GPTModel(GPT_CONFIG_124M)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(script_dir, "models/test/model.pth")
+    state_dict = torch.load(filepath, map_location=common_device, weights_only=True)
+    result = model.load_state_dict(state_dict)
+    assert not result.missing_keys and not result.unexpected_keys, result
+    model.eval()
+
+# 保存权重+优化器
+# 提问 5： 为什么需要保存优化器数值
+def save_model_optim():
+    model, optimizer = pre_train()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(script_dir, "models/test/model_and_optimizer.pth")
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    torch.save({"model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict()}, filepath)
+
+# 加载权重和优化器
+def load_model_optim():
+    # 读取文件
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, "models/test/model_and_optimizer.pth")
+    checkpoint = torch.load(file_path, map_location=common_device, weights_only=True)
+
+    # 加载模型权重
+    model = GPTModel(GPT_CONFIG_124M).to(common_device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+
+    # 加载优化器AdamW
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.0004, weight_decay=0.1)
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+
+    # 模型切换为训练状态
+    model.train()
+
+    return model, optimizer
+
+# practice5.4: 加载权重与优化器参数，继续做一轮预训练
+def practice5_4():
+    model, optimizer = load_model_optim()
+    train_loader, val_loader = construct_train_batch()
+    train_model_simple(
+        model=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        optimizer=optimizer,
+        device=common_device,
+        num_epochs=1,
+        eval_freq=5,
+        eval_iter=5,
+        start_context="Every effort moves you",
+        tokenizer=tokenizer
+    )
+
+
+# ================================ 下载并加载权重 ================================
+# 下载gpt_download.py
+def download_gpt_loader():
+    import urllib.request
+    url = (
+        "https://raw.githubusercontent.com/rasbt/"
+        "LLMs-from-scratch/main/ch05/"
+        "01_main-chapter-code/gpt_download.py"
+    )
+    filename = url.split('/')[-1]
+    urllib.request.urlretrieve(url, filename)
+
+# 下载GPT模型
+def download_GPT():
+    from gpt_download import download_and_load_gpt2
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    settings, params = download_and_load_gpt2(
+        model_size="124M", models_dir=os.path.join(script_dir, "models")
+    )
+    print("settings: ", settings)
+    print("params dictionary keys: ", params.keys())
+
+    # 打印词元嵌入权重
+    print(params["wte"])
+    print("weight of token embedding shape: ", params["wte"].shape)
+    print("weights of transformer keys: ", params["blocks"][0].keys())
+    print("weights of attn keys: ", params["blocks"][0]["attn"].keys())
+    print("weights of mlp keys: ", params["blocks"][0]["mlp"].keys())
+    print("weights of c_attn keys: ", params["blocks"][0]["attn"]["c_attn"].keys())
+
+# 检查向量维度对齐
+def assign(left, right):
+    if left.shape  != right.shape:
+        raise ValueError(f"shape mismatch. Left: {left.shape}, Right: {right.shape}")
+    
+    return torch.nn.Parameter(torch.tensor(right))
+
+# 加载权重进GPTModel
+def load_weights_into_gpt(gpt:GPTModel, params:dict[str, list[dict]]):
+    import numpy as np
+
+    # 嵌入层
+    gpt.tok_emb.weight = assign(gpt.tok_emb.weight, params["wte"])
+    gpt.pos_emb.weight = assign(gpt.pos_emb.weight, params["wpe"])
+
+    # transformer块
+    for b in range(len(params["blocks"])):
+        
+        # 提问 6： 为什么有的权重矩阵需要转置
+
+        # attention
+        # qkv
+        q_w, k_w, v_w = np.split(params["blocks"][b]["attn"]["c_attn"]["w"], 3, axis=-1)
+        gpt.tfb[b].atten.W_q.weight = assign(gpt.tfb[b].atten.W_q.weight, q_w.T)
+        gpt.tfb[b].atten.W_k.weight = assign(gpt.tfb[b].atten.W_k.weight, k_w.T)
+        gpt.tfb[b].atten.W_v.weight = assign(gpt.tfb[b].atten.W_v.weight, v_w.T)
+        q_b, k_b, v_b = np.split(params["blocks"][b]["attn"]["c_attn"]["b"], 3, axis=-1)
+        gpt.tfb[b].atten.W_q.bias = assign(gpt.tfb[b].atten.W_q.bias, q_b)
+        gpt.tfb[b].atten.W_k.bias = assign(gpt.tfb[b].atten.W_k.bias, k_b)
+        gpt.tfb[b].atten.W_v.bias = assign(gpt.tfb[b].atten.W_v.bias, v_b)
+
+        # out_proj
+        gpt.tfb[b].atten.out_proj.weight = assign(gpt.tfb[b].atten.out_proj.weight, params["blocks"][b]["attn"]["c_proj"]["w"].T)
+        gpt.tfb[b].atten.out_proj.bias = assign(gpt.tfb[b].atten.out_proj.bias, params["blocks"][b]["attn"]["c_proj"]["b"])
+
+        # feedforward
+        gpt.tfb[b].ff.layers[0].weight = assign(gpt.tfb[b].ff.layers[0].weight, params["blocks"][b]["mlp"]["c_fc"]["w"].T)
+        gpt.tfb[b].ff.layers[0].bias = assign(gpt.tfb[b].ff.layers[0].bias, params["blocks"][b]["mlp"]["c_fc"]["b"])
+        gpt.tfb[b].ff.layers[2].weight = assign(gpt.tfb[b].ff.layers[2].weight, params["blocks"][b]["mlp"]["c_proj"]["w"].T)
+        gpt.tfb[b].ff.layers[2].bias = assign(gpt.tfb[b].ff.layers[2].bias, params["blocks"][b]["mlp"]["c_proj"]["b"])
+
+        # layernorm1、2
+        gpt.tfb[b].norm1.scale = assign(gpt.tfb[b].norm1.scale, params["blocks"][b]["ln_1"]["g"])
+        gpt.tfb[b].norm1.shift = assign(gpt.tfb[b].norm1.shift, params["blocks"][b]["ln_1"]["b"])
+        gpt.tfb[b].norm2.scale = assign(gpt.tfb[b].norm2.scale, params["blocks"][b]["ln_2"]["g"])
+        gpt.tfb[b].norm2.shift = assign(gpt.tfb[b].norm2.shift, params["blocks"][b]["ln_2"]["b"])
+
+    # layernorm+out
+    gpt.final_norm.scale = assign(gpt.final_norm.scale, params["g"])
+    gpt.final_norm.shift = assign(gpt.final_norm.shift, params["b"])
+    gpt.out_head.weight = assign(gpt.out_head.weight, params["wte"])
+
+# 加载GPT参数，生成文本
+def load_gpt_model():
+    model_name = "gpt2-small (124M)"
+    NEW_CONFIG = GPT_CONFIG_124M.copy()
+    NEW_CONFIG.update(model_configs[model_name]) 
+
+    # 更新上下文长度、qkv_bias
+    NEW_CONFIG.update({"context_length": 1024})
+    NEW_CONFIG.update({"qkv_bias": True})
+
+    # 创建模型
+    gpt = GPTModel(NEW_CONFIG)
+    gpt.eval()
+
+    # 读取模型参数
+    from gpt_download import download_and_load_gpt2
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    settings, params = download_and_load_gpt2(
+        model_size="124M", models_dir=os.path.join(script_dir, "models")
+    )
+
+    # 加载权重
+    load_weights_into_gpt(gpt, params)
+    gpt.eval()
+
+    # 使用新模型生成文本
+    torch.manual_seed(123)
+    token_ids = generate(
+        model=gpt,
+        idx = text_to_token_ids("Every effort moves you", tokenizer),
+        max_new_tokens=25,
+        context_size=NEW_CONFIG["context_length"],
+        temperature=1.5,
+        top_k=50
+    )
+    print("output text by gpt: ", token_ids_to_text(token_ids, tokenizer))
+
+# practice5.5 使用gpt计算“the-verdict.txt”训练集验证集损失
+def practice5_5():
+    model_name = "gpt2-small (124M)"
+    NEW_CONFIG = GPT_CONFIG_124M.copy()
+    NEW_CONFIG.update(model_configs[model_name]) 
+
+    # 更新上下文长度、qkv_bias
+    NEW_CONFIG.update({"context_length": 1024})
+    NEW_CONFIG.update({"qkv_bias": True})
+
+    # 创建模型
+    gpt = GPTModel(NEW_CONFIG)
+    gpt.eval()
+
+    # 读取模型参数
+    from gpt_download import download_and_load_gpt2
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    settings, params = download_and_load_gpt2(
+        model_size="124M", models_dir=os.path.join(script_dir, "models")
+    )
+
+    # 加载权重
+    load_weights_into_gpt(gpt, params)
+    gpt.eval()
+
+    # 计算损失
+    train_loader, val_loader = construct_train_batch()
+    with torch.no_grad():
+        train_loss = calc_loss_loader(train_loader, gpt, common_device, num_batches=5)
+        val_loss = calc_loss_loader(val_loader, gpt, common_device, num_batches=5)
+    print("train loss calc by gpt: ", train_loss)
+    print("validate loss calc by gpt: ", val_loss)
+    
+
+# practice5.6 对比不同大小gpt模型生成文本
+def practice5_6():
+    model_name = "gpt2-medium (355M)"
+    NEW_CONFIG = GPT_CONFIG_124M.copy()
+    NEW_CONFIG.update(model_configs[model_name]) 
+
+    # 更新上下文长度、qkv_bias
+    NEW_CONFIG.update({"context_length": 1024})
+    NEW_CONFIG.update({"qkv_bias": True})
+
+    # 创建模型
+    gpt = GPTModel(NEW_CONFIG)
+    gpt.eval()
+
+    # 读取模型参数
+    from gpt_download import download_and_load_gpt2
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    settings, params = download_and_load_gpt2(
+        model_size="355M", models_dir=os.path.join(script_dir, "models")
+    )
+
+    # 加载权重
+    load_weights_into_gpt(gpt, params)
+    gpt.eval()
+
+    # 使用新模型生成文本
+    torch.manual_seed(123)
+    token_ids = generate(
+        model=gpt,
+        idx = text_to_token_ids("Every effort moves you", tokenizer),
+        max_new_tokens=25,
+        context_size=NEW_CONFIG["context_length"],
+        temperature=1.5,
+        top_k=50
+    )
+    print("output text by gpt: ", token_ids_to_text(token_ids, tokenizer))
+
 # ================================ 指定执行 ================================
 if __name__=="__main__":
     # test_generate_shape()
     # test_ids_text()
-    # construct_batch_calc_loss()
+    # calc_loss_by_step()
+    # construct_train_batch()
     # test_calc_loss_loader()
     # pre_train()
     # test_gen_after_pretrain()
     # test_temperature()
     # practice5_1()
     # top_k_sample()
-    test_generate()
+    # test_generate()
+    # test_model_save()
+    # test_model_load()
+    # save_model_optim()
+    # load_model_optim()
+    # practice5_4()
+    # download_gpt_loader()
+    # download_GPT()
+    # load_gpt_model()
+    #practice5_5()
+    practice5_6()
+

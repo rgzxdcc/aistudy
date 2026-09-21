@@ -168,3 +168,13 @@ debug.log
 
 # 数据集（可由 embedding_test.py 重新下载）
 llm_app/02_llm_from_scratch/the-verdict.txt
+
+# GPT-2 预训练权重（gpt_download.py 下载，单文件约 500MB，不入库）
+llm_app/02_llm_from_scratch/models/
+
+# 分类数据集（原始 TSV 可重新下载，CSV 由 prepare 脚本生成）
+llm_app/02_llm_from_scratch/sms_spam_collection/
+
+# matplotlib 训练曲线产物
+/accuracy-plot.pdf
+/loss-plot.pdf
