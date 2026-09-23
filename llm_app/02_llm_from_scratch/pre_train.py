@@ -278,7 +278,7 @@ def pre_train():
     model = GPTModel(GPT_CONFIG_124M)
     model.to(common_device)
     optimizer = torch.optim.AdamW(model.parameters(), lr = 0.0004, weight_decay=0.1)
-    num_epochs = 10
+    num_epochs = 15
     train_loader, val_loader = construct_train_batch()
 
     # 开启训练循环
@@ -751,7 +751,7 @@ if __name__=="__main__":
     # calc_loss_by_step()
     # construct_train_batch()
     # test_calc_loss_loader()
-    # pre_train()
+    pre_train()
     # test_gen_after_pretrain()
     # test_temperature()
     # practice5_1()
@@ -765,6 +765,6 @@ if __name__=="__main__":
     # download_gpt_loader()
     # download_GPT()
     # load_gpt_model()
-    #practice5_5()
-    practice5_6()
+    # practice5_5()
+    # practice5_6()
 
