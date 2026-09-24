@@ -261,7 +261,7 @@ def model_modify():
         num_classes
     )
 
-    # 将最终层归一化与最后一个Transfomer块的梯度激活
+    # 将最终层归一化与最后一个Transformer块的梯度激活
     for param in model.final_norm.parameters():
         param.requires_grad = True
     for param in model.tfb[-1].parameters():
