@@ -391,7 +391,7 @@ def test_LoRA():
 
 # ================================ 指定执行 ================================
 if __name__=="__main__":
-    # test_lr_warmup()
+    test_lr_warmup()
     # test_cosine_decay()
     # cal_gradient()
     # begin_train()

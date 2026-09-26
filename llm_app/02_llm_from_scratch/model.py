@@ -239,7 +239,7 @@ def test_residual_connection():
     model_with_shortcut = ExampleNeuralNetwork(layer_sizes, use_shorcut=True)
     print_gradients(model_with_shortcut, sample_input)
 
-# ================================ transfomer block ================================
+# ================================ transformer block ================================
 # 构建Transformer
 class TransformerBlock(nn.Module):
     def __init__(self, cfg) -> None:
