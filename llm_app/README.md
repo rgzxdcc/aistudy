@@ -34,7 +34,8 @@
 
 ### 2.3 RAG：03_rag
 1. 工程位于 llm_app/03_rag 目录下
-2. 理解 RAG 的基础概念以及流程，手敲实现:文本分块，简单 top-k 检索排序
+2. 理解 RAG 的基础概念以及流程，手敲实现:文本分块，简单 top-k 检索排序。详见：chunking.py、embedding.py
+3. 学习向量数据库 Milvus 使用方式，组建基础 pipeline 将 RAG 的基础流程搭建起来。详见：vector_store.py、pipeline.py
 
 
 ### 3. 安装教程
