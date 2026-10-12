@@ -35,7 +35,7 @@ def retrieve_rank(query, texts, top_k):
 # 检验top-k检索排序
 def test_retrieve_topk():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(cur_dir, "2026-09-26.md")
+    file_path = os.path.join(cur_dir, "doc_texts.md")
     with open(file_path, 'r', encoding='utf-8') as f:
         text = f.read()
     

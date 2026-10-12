@@ -11,7 +11,7 @@ def window_chunking(text, chunk_size, overlap):
 # 测试固定窗口切块
 def test_window_chunk():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(cur_dir, "2026-09-26.md")
+    file_path = os.path.join(cur_dir, "doc_texts.md")
     with open(file_path, 'r', encoding='utf-8') as f:
         text = f.read()
     
@@ -56,7 +56,7 @@ def recursive_chunking(text, chunk_size, separators=["\n\n", "\n", "。", "！",
 # 测试递归切块
 def test_recursive_chunk():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(cur_dir, "2026-09-26.md")
+    file_path = os.path.join(cur_dir, "doc_texts.md")
     with open(file_path, 'r', encoding='utf-8') as f:
         text = f.read()
     
