@@ -1,18 +1,9 @@
 import os
 os.environ["GRPC_VERBOSITY"] = "ERROR" # 屏蔽gRPC提示信息
-from dotenv import load_dotenv
-from openai import OpenAI
-from pymilvus import MilvusClient
-from sentence_transformers import SentenceTransformer
-from embedding import recursive_chunking
 from pipeline import create_emb, load_milvus, create_llm, rag_pipeline
 
 COLLECTION_NAME = "rag_collection"
-DB_FILENAME = "milvus_rag.db"
-VECTOR_DIM = 512
 
-
-    
 # 重写查询问题
 def query_rewrite(model, query)->list[str]:
     prompt = f""" 提示词重写格式如下 
@@ -40,8 +31,9 @@ def Multi_Retrieve(embbed, milvus, queries, top_k = 3):
     print("emb_queries shape", len(emb_queries))
 
     # 多路检索
+    # 注意：不可改回下方注释的批量检索，当前环境 milvus-lite 对 nq>1 的批量查询存在 segfault 缺陷
     # results = milvus.search(
-    #     COLLECTION_NAME, 
+    #     COLLECTION_NAME,
     #     emb_queries,
     #     limit = top_k,
     #     output_fields=["text"])
