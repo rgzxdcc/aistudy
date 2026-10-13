@@ -1,6 +1,7 @@
 import os
 os.environ["GRPC_VERBOSITY"] = "ERROR" # 屏蔽gRPC提示信息
-from pipeline import create_emb, load_milvus, create_llm, rag_pipeline
+from pipeline import create_emb, load_milvus, \
+    create_llm, rag_pipeline, generate
 
 COLLECTION_NAME = "rag_collection"
 
@@ -71,26 +72,9 @@ def rag_rewrite(embbed, milvus, model, query, top_k = 3):
     context_str = "\n\n".join(f"[{i+1}] {c}" for i,c in enumerate(context))
 
     # 将问题与查询结果均送入LLM，进行最终结果生成
-    q_context = f"""基于以下参考资料回答问题。请严格根据参考资料内容作答，如果资料中没有提及，请明确回答“参考资料中未提及相关信息”，禁止捏造事实。
-
-    【参考资料】：
-    {context_str}
-
-    【用户问题】：
-    {query}
-
-    【回答】："""
-
-    response = model.chat.completions.create(
-        model="deepseek-flash",
-        messages=[
-            {"role": "system", "content":"You are a helpful assistant"},
-            {"role": "user", "content":q_context},
-        ],
-        extra_body={"thinking":{"type":"disabled"}}
-    )
-    print("RAG after query_rewrite final query result from llm: ", response.choices[0].message.content)
-    return response.choices[0].message.content
+    final_result = generate(model, query, context_str)
+    # print("RAG rewrite final query result from llm: ", final_result)
+    return final_result
 
 
 # 对比原生查询语句与重写查询语句结果

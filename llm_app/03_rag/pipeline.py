@@ -47,6 +47,29 @@ def load_milvus(embbed=None):
 
     return client
 
+# 封装 llm 生成最终结果
+def generate(model, query, context):
+    # 将问题与查询结果均送入LLM，进行最终结果生成
+    q_context = f"""基于以下参考资料回答问题。请严格根据参考资料内容作答，如果资料中没有提及，请明确回答“参考资料中未提及相关信息”，禁止捏造事实。
+
+    【参考资料】：
+    {context}
+
+    【用户问题】：
+    {query}
+
+    【回答】："""
+
+    response = model.chat.completions.create(
+        model="deepseek-flash",
+        messages=[
+            {"role": "system", "content":"You are a helpful assistant"},
+            {"role": "user", "content":q_context},
+        ],
+        extra_body={"thinking":{"type":"disabled"}}
+    )
+    return response.choices[0].message.content
+
 def rag_pipeline(embbed, milvus, model, query, top_k = 3):
     # 组织查询
     q_vector = embbed.encode(query)
@@ -64,27 +87,10 @@ def rag_pipeline(embbed, milvus, model, query, top_k = 3):
         context.append(result["entity"]["text"])
     context_str = "\n\n".join(f"[{i+1}] {c}" for i,c in enumerate(context))
 
-    # 将问题与查询结果均送入LLM，进行最终结果生成
-    q_context = f"""基于以下参考资料回答问题。请严格根据参考资料内容作答，如果资料中没有提及，请明确回答“参考资料中未提及相关信息”，禁止捏造事实。
-
-    【参考资料】：
-    {context_str}
-
-    【用户问题】：
-    {query}
-
-    【回答】："""
-
-    response = model.chat.completions.create(
-        model="deepseek-flash",
-        messages=[
-            {"role": "system", "content":"You are a helpful assistant"},
-            {"role": "user", "content":q_context},
-        ],
-        extra_body={"thinking":{"type":"disabled"}}
-    )
-    print("RAG pipeline final query result from llm: ", response.choices[0].message.content)
-    return response.choices[0].message.content
+    # llm 生成最终答案
+    final_result = generate(model, query, context_str)
+    # print("RAG pipeline final query result from llm: ", final_result)
+    return final_result
 
 # ================================ 指定执行 ================================
 if __name__=="__main__":

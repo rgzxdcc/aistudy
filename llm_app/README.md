@@ -37,6 +37,7 @@
 2. 理解 RAG 的基础概念以及流程，手敲实现:文本分块，简单 top-k 检索排序。详见：chunking.py、embedding.py
 3. 学习向量数据库 Milvus 使用方式，组建基础 pipeline 将 RAG 的基础流程搭建起来。详见：vector_store.py、pipeline.py
 4. 学习查询重写技术，以及简单的文本块去重融合排序功能，相较简单的 RAG pipeline，结果有一定改善。详见： query_rewrite.py
+5. 学习稀疏向量、稠密向量概念，实现关键词检索+向量检索+RRF->混合检索整个流程。详见：hybrid_search.py
 
 
 ### 3. 安装教程
