@@ -184,3 +184,6 @@ llm_app/02_llm_from_scratch/sms_spam_collection/
 
 # Milvus Lite 向量库产物（pipeline.py 运行时可重建）
 llm_app/03_rag/milvus_rag.db/
+
+# RAG 知识库语料与索引产物（ingest.py 运行时可重建）
+llm_app/03_rag/data/
